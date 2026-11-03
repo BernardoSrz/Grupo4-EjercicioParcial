@@ -4,9 +4,55 @@
 #include <string>
 #include <cctype>
 #include <cmath>
+#include <windows.h>
 #include "Pila.h"
-
 using namespace std;
+
+void color(int c) {
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), c);
+}
+
+void renderizarEstado(Pila<char>& pilaOriginal, string salida, char token, string tipoMensaje) {
+    system("cls");
+    
+    color(11); // cyan
+    cout << "=== SIMULACION SHUNTING YARD (" << tipoMensaje << ") ===\n\n";
+    
+    color(15); // blanco
+    cout << " Token actual: [ ";
+    color(14); // amarillo
+    cout << token;
+    color(15);
+    cout << " ]\n\n";
+    
+    cout << " [ Pila de Operadores ]\n";
+    
+    Pila<char> pilaTemp; // pila auxiliar para dibujar
+
+    if (pilaOriginal.estaVacia()) {
+        cout << "    (vacia)\n";
+    } else {
+        while (!pilaOriginal.estaVacia()) { // vaciar la original para imprimir de arriba hacia abajo
+            char op = pilaOriginal.pop();
+            color(10); // verde para los operadores
+            cout << "      |  " << op << "  |\n";
+            pilaTemp.push(op); // guardar en la temporal
+        }
+    }
+    
+    color(15);
+    cout << "      +-----+\n\n";
+    
+    while (!pilaTemp.estaVacia()) { // restaurar la pila original
+        pilaOriginal.push(pilaTemp.pop());
+    }
+    
+    cout << " Salida Temporal: ";
+    color(14);
+    cout << salida << "\n\n";
+    color(15);
+    Sleep(1000);
+}
 
 string invertirCadena(string str) {
     int n = str.length();
@@ -28,7 +74,8 @@ int obtenerPrioridad(char op) {
 string infijaAPostfija(string infija) {
     Pila<char> pilaOperadores;
     string postfija = "";
-
+    renderizarEstado(pilaOperadores, postfija, ' ', "POSTFIJA");
+    
     for (size_t i = 0; i < infija.length(); i++) {
         char c = infija[i];
         if (isalnum(static_cast<unsigned char>(c))) {
@@ -38,6 +85,7 @@ string infijaAPostfija(string infija) {
         } else if (c == ')') {
             while (!pilaOperadores.estaVacia() && pilaOperadores.top() != '(') {
                 postfija += pilaOperadores.pop();
+                renderizarEstado(pilaOperadores, postfija, c, "POSTFIJA");
             }
             if (!pilaOperadores.estaVacia()) pilaOperadores.pop();
         } else {
@@ -46,12 +94,15 @@ string infijaAPostfija(string infija) {
                    (obtenerPrioridad(pilaOperadores.top()) > obtenerPrioridad(c) ||
                    (obtenerPrioridad(pilaOperadores.top()) == obtenerPrioridad(c) && c != '^'))) {
                 postfija += pilaOperadores.pop();
+                renderizarEstado(pilaOperadores, postfija, c, "POSTFIJA");
             }
             pilaOperadores.push(c);
         }
+        renderizarEstado(pilaOperadores, postfija, c, "POSTFIJA");
     }
     while (!pilaOperadores.estaVacia()) {
         postfija += pilaOperadores.pop();
+        renderizarEstado(pilaOperadores, postfija, ' ', "POSTFIJA");
     }
     return postfija;
 }
@@ -65,6 +116,7 @@ string infijaAPrefija(string infija) {
 
     Pila<char> pilaOperadores;
     string prefijaTemp = "";
+    renderizarEstado(pilaOperadores, prefijaTemp, ' ', "PREFIJA");
 
     for (size_t i = 0; i < invertida.length(); i++) {
         char c = invertida[i];
@@ -75,6 +127,7 @@ string infijaAPrefija(string infija) {
         } else if (c == ')') {
             while (!pilaOperadores.estaVacia() && pilaOperadores.top() != '(') {
                 prefijaTemp += pilaOperadores.pop();
+                renderizarEstado(pilaOperadores, prefijaTemp, c, "PREFIJA");
             }
             if (!pilaOperadores.estaVacia()) pilaOperadores.pop();
         } else {
@@ -83,14 +136,30 @@ string infijaAPrefija(string infija) {
                    (obtenerPrioridad(pilaOperadores.top()) > obtenerPrioridad(c) ||
                    (obtenerPrioridad(pilaOperadores.top()) == obtenerPrioridad(c) && c == '^'))) {
                 prefijaTemp += pilaOperadores.pop();
+                renderizarEstado(pilaOperadores, prefijaTemp, c, "PREFIJA");
             }
             pilaOperadores.push(c);
         }
+        renderizarEstado(pilaOperadores, prefijaTemp, c, "PREFIJA");
     }
     while (!pilaOperadores.estaVacia()) {
         prefijaTemp += pilaOperadores.pop();
+        renderizarEstado(pilaOperadores, prefijaTemp, ' ', "PREFIJA");
     }
-    return invertirCadena(prefijaTemp);
+    
+    string resultadoFinal = invertirCadena(prefijaTemp);
+    system("cls");
+    color(11);
+    cout << "=== SIMULACION SHUNTING YARD (PREFIJA) ===\n\n";
+    color(10);
+    cout << " INVERSION FINAL COMPLETADA\n\n";
+    color(15);
+    cout << " Salida Prefija Real: ";
+    color(14);
+    cout << resultadoFinal << "\n\n";
+    color(15);
+    Sleep(1500);
+    return resultadoFinal;
 }
 
 double evaluarPostfija(string postfija) {
