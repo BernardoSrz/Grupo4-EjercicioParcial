@@ -14,23 +14,22 @@ void color(int c) {
 
 void renderizarEstado(Pila<char>& pilaOriginal, string salida, char token, string tipoMensaje) {
     system("cls");
-    
+
     color(11); // cyan
-    cout << "=== SIMULACION SHUNTING YARD (" << tipoMensaje << ") ===\n\n";
-    
+    cout << "=== SIMULACIÓN SHUNTING YARD (" << tipoMensaje << ") ===\n\n";
+
     color(15); // blanco
     cout << " Token actual: [ ";
     color(14); // amarillo
     cout << token;
     color(15);
     cout << " ]\n\n";
-    
-    cout << " [ Pila de Operadores ]\n";
-    
+    cout << " [ Pila de Operadores ]\n\n";
+
     Pila<char> pilaTemp; // pila auxiliar para dibujar
 
     if (pilaOriginal.estaVacia()) {
-        cout << "    (vacia)\n";
+        cout << "      (vacia)\n";
     } else {
         while (!pilaOriginal.estaVacia()) { // vaciar la original para imprimir de arriba hacia abajo
             char op = pilaOriginal.pop();
@@ -39,19 +38,60 @@ void renderizarEstado(Pila<char>& pilaOriginal, string salida, char token, strin
             pilaTemp.push(op); // guardar en la temporal
         }
     }
-    
+
     color(15);
     cout << "      +-----+\n\n";
-    
+
     while (!pilaTemp.estaVacia()) { // restaurar la pila original
         pilaOriginal.push(pilaTemp.pop());
     }
-    
+
     cout << " Salida Temporal: ";
     color(14);
     cout << salida << "\n\n";
+    color(8); // gris
+    cout << " [Presione cualquier tecla para avanzar al siguiente token]\n";
+    color(15); // blanco otra vez
+    system("pause > nul");
+}
+
+void renderizarEstadoEvaluacion(Pila<double>& pilaOriginal, char token, string tipoMensaje) {
+    system("cls");
+    color(11);
+    cout << "=== EVALUACION SHUNTING YARD (" << tipoMensaje << ") ===\n\n";
+
     color(15);
-    Sleep(1000);
+    cout << " Analizando: [ ";
+    color(14);
+    cout << token;
+    color(15);
+    cout << " ]\n\n";
+    cout << " [ Pila de Valores Numéricos ]\n";
+
+    Pila<double> pilaTemp;
+
+    if (pilaOriginal.estaVacia()) {
+        cout << "    (vacia)\n";
+    } else {
+        while (!pilaOriginal.estaVacia()) {
+            double val = pilaOriginal.pop();
+            color(10); // Verde para los números
+            cout << "      |  " << val << "  |\n";
+            pilaTemp.push(val);
+        }
+    }
+
+    color(15);
+    cout << "       +-----+\n\n";
+
+    while (!pilaTemp.estaVacia()) {
+        pilaOriginal.push(pilaTemp.pop());
+    }
+
+    color(8);
+    cout << " [Presione cualquier tecla para ver la operacion]\n";
+    color(15);
+    system("pause > nul");
 }
 
 string invertirCadena(string str) {
@@ -75,7 +115,7 @@ string infijaAPostfija(string infija) {
     Pila<char> pilaOperadores;
     string postfija = "";
     renderizarEstado(pilaOperadores, postfija, ' ', "POSTFIJA");
-    
+
     for (size_t i = 0; i < infija.length(); i++) {
         char c = infija[i];
         if (isalnum(static_cast<unsigned char>(c))) {
@@ -146,13 +186,13 @@ string infijaAPrefija(string infija) {
         prefijaTemp += pilaOperadores.pop();
         renderizarEstado(pilaOperadores, prefijaTemp, ' ', "PREFIJA");
     }
-    
+
     string resultadoFinal = invertirCadena(prefijaTemp);
     system("cls");
     color(11);
     cout << "=== SIMULACION SHUNTING YARD (PREFIJA) ===\n\n";
     color(10);
-    cout << " INVERSION FINAL COMPLETADA\n\n";
+    cout << " INVERSIÓN FINAL COMPLETADA\n\n";
     color(15);
     cout << " Salida Prefija Real: ";
     color(14);
@@ -164,6 +204,8 @@ string infijaAPrefija(string infija) {
 
 double evaluarPostfija(string postfija) {
     Pila<double> pilaValores;
+    renderizarEstadoEvaluacion(pilaValores, ' ', "POSTFIJA");
+
     for (size_t i = 0; i < postfija.length(); i++) {
         char c = postfija[i];
         if (isdigit(static_cast<unsigned char>(c))) {
@@ -188,11 +230,10 @@ double evaluarPostfija(string postfija) {
             }
             else if (c == '^') pilaValores.push(pow(val1, val2));
         }
+        renderizarEstadoEvaluacion(pilaValores, c, "POSTFIJA");
     }
     if (pilaValores.estaVacia()) return 0;
-
     double resultado = pilaValores.pop();
-
     if (!pilaValores.estaVacia()) return 0;
 
     return resultado;
@@ -200,6 +241,8 @@ double evaluarPostfija(string postfija) {
 
 double evaluarPrefija(string prefija) {
     Pila<double> pilaValores;
+    renderizarEstadoEvaluacion(pilaValores, ' ', "PREFIJA");
+
     for (int i = (int)prefija.length() - 1; i >= 0; i--) {
         char c = prefija[i];
         if (isdigit(static_cast<unsigned char>(c))) {
@@ -224,11 +267,10 @@ double evaluarPrefija(string prefija) {
             }
             else if (c == '^') pilaValores.push(pow(val1, val2));
         }
+        renderizarEstadoEvaluacion(pilaValores, c, "PREFIJA");
     }
     if (pilaValores.estaVacia()) return 0;
-
     double resultado = pilaValores.pop();
-
     if (!pilaValores.estaVacia()) return 0;
 
     return resultado;
